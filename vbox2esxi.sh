@@ -1,41 +1,42 @@
 #!/bin/bash
 # file: vbox2esxi.sh
 
-# extract subfiles
-tar -xvf test-agent-1.ova
+FILENAME="$1"
 
+RED='\033[0;31m'
+GRN='\033[0;32m'
+YEL='\033[0;33m'
+BLU='\033[0;34m'
+VLT='\033[0;35m'
+NC='\033[0m' # No Color
+
+OVF_FILENAME="$(basename ${FILENAME} .ova).ovf"
+MF_FILENAME="$(basename ${FILENAME} .ova).mf"
+BAK_FILENAME="${OVF_FILENAME}.bak"
+
+# STEP 1 (extract files & back-up .ovf)
+tar -xvf $FILENAME
+cp $OVF_FILENAME $BAK_FILENAME
 
 # todo: remove TAGs that are NOT associated with VMware
 
-# STEP 1
-# <vssd:VirtualSystemType>virtualbox-2.2</vssd:VirtualSystemType>  
-# 2->
-# <vssd:VirtualSystemType>vmx-07</vssd:VirtualSystemType>
+# STEP 2 (change virtual-sys description to ESXi7.0)
+sed -i '/<vssd:VirtualSystemType>virtualbox/c\        <vssd:VirtualSystemType>vmx-07</vssd:VirtualSystemType>' "$OVF_FILENAME"
 
-# STEP 2
-# <Item>
-#   <rasd:Address>0</rasd:Address>
-#   <rasd:Caption>sataController0</rasd:Caption>
-#   <rasd:Description>SATA Controller</rasd:Description>
-#   <rasd:ElementName>sataController0</rasd:ElementName>
-#   <rasd:InstanceID>5</rasd:InstanceID>
-#   <rasd:ResourceSubType>AHCI</rasd:ResourceSubType>
-#   <rasd:ResourceType>20</rasd:ResourceType>
-# </Item>
-# 2-> 
-# <Item>
-#   <rasd:Address>0</rasd:Address>
-#   <rasd:Caption>SCSIController</rasd:Caption>
-#   <rasd:Description>SCSI Controller</rasd:Description>
-#   <rasd:ElementName>SCSIController</rasd:ElementName>
-#   <rasd:InstanceID>5</rasd:InstanceID>
-#   <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
-#   <rasd:ResourceType>6</rasd:ResourceType>
-# </Item>
+# STEP 3 (replace SATA controlel description)
+sed -i '/<rasd:Caption>sataController/c\        <rasd:Caption>SCSIController</rasd:Caption>' "$OVF_FILENAME"
+sed -i '/<rasd:Description>SATA Controller/c\        <rasd:Description>SCSI Controller</rasd:Description>' "$OVF_FILENAME"
+sed -i '/<rasd:ElementName>sataController/c\        <rasd:ElementName>SCSIController</rasd:ElementName>' "$OVF_FILENAME"
+sed -i '/<rasd:ResourceSubType>AHCI/c\        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>' "$OVF_FILENAME"
+sed -i '/<rasd:ResourceType>20/c\        <rasd:ResourceType>6</rasd:ResourceType>' "$OVF_FILENAME"
 
-# calculate SHA1
-sha1sum test-agent-1.ovf 
+diff -y $BAK_FILENAME $OVF_FILENAME 
+printf "\n${YEL} List of Changes ###---------------------------------------------------------------------------------------\n"
+diff -y --suppress-common-lines $BAK_FILENAME $OVF_FILENAME 
+printf "\n-----------------------------------------------------------------------------------------------------------${NC}\n"
 
 
-# need to be update the value for sha1 "test-agent-1.mf"
-# SHA1 (test-agent-1.ovf) = 07e491ae10e360429bd10ca4cf8ff2c2f96a0ac7
+# STEp 4 (calculate SHA1 for the changes)
+hash=($(sha1sum $OVF_FILENAME))
+echo $hash
+sed -i "/SHA1 ($OVF_FILENAME) = /c\SHA1 ($OVF_FILENAME) = ${hash}" "$MF_FILENAME"
