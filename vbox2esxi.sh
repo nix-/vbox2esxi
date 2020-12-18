@@ -14,6 +14,32 @@ OVF_FILENAME="$(basename ${FILENAME} .ova).ovf"
 MF_FILENAME="$(basename ${FILENAME} .ova).mf"
 BAK_FILENAME="${OVF_FILENAME}.bak"
 
+#    +----------------+
+#    |Extract the     |
+#    |.ova file       |
+#    +---+------------+
+#        |
+#        |
+#    +---v------------+
+#    |Changing VM     |
+#    |description     |
+#    +---+------------+
+#        |
+#        |
+#    +---v------------+
+#    |Replacing       |
+#    |SATA-controller |
+#    |description     |
+#    +---+------------+
+#        |
+#        |
+#    +---v------------+
+#    |Generating Hash |
+#    |for the new     |
+#    |.ovf file       |
+#    +----------------+
+
+
 # STEP 1 (extract files & back-up .ovf)
 tar -xvf $FILENAME
 cp $OVF_FILENAME $BAK_FILENAME
@@ -35,8 +61,7 @@ printf "\n${YEL} List of Changes ###--------------------------------------------
 diff -y --suppress-common-lines $BAK_FILENAME $OVF_FILENAME 
 printf "\n-----------------------------------------------------------------------------------------------------------${NC}\n"
 
-
-# STEp 4 (calculate SHA1 for the changes)
+# STEP 4 (calculate SHA1 for the changes)
 hash=($(sha1sum $OVF_FILENAME))
 echo $hash
 sed -i "/SHA1 ($OVF_FILENAME) = /c\SHA1 ($OVF_FILENAME) = ${hash}" "$MF_FILENAME"
