@@ -1,7 +1,8 @@
 #!/bin/bash
 # file: vbox2esxi.sh
 
-FILENAME="$1"
+#FILENAME="$1"
+FILENAME="$(zenity --file-selection --title="Select a file")"
 
 RED='\033[0;31m'
 GRN='\033[0;32m'
