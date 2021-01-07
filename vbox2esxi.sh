@@ -15,6 +15,10 @@ OVF_FILENAME="$(basename ${FILENAME} .ova).ovf"
 MF_FILENAME="$(basename ${FILENAME} .ova).mf"
 BAK_FILENAME="${OVF_FILENAME}.bak"
 
+# list of peripherals that are NOT intercompatible by both systems
+# note: this list is expected to grow according the virtal-peripherals that are going to be marked as NOT compatble (maybe with input from users)
+REM_V_PERIF=('sound' )
+
 #    +----------------+
 #    |Extract the     |
 #    |.ova file       |
@@ -31,6 +35,13 @@ BAK_FILENAME="${OVF_FILENAME}.bak"
 #    |Replacing       |
 #    |SATA-controller |
 #    |description     |
+#    +---+------------+
+#        |
+#        |
+#    +---v------------+
+#    |Removing        |
+#    |critical        |
+#    |peripherals     |
 #    +---+------------+
 #        |
 #        |
@@ -57,8 +68,14 @@ sed -i '/<rasd:ElementName>sataController/c\        <rasd:ElementName>SCSIContro
 sed -i '/<rasd:ResourceSubType>AHCI/c\        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>' "$OVF_FILENAME"
 sed -i '/<rasd:ResourceType>20/c\        <rasd:ResourceType>6</rasd:ResourceType>' "$OVF_FILENAME"
 
+# STEP 4 (removing virtual peripherals)
+#    removing the possibly incompatible peripherals
+for v_perif in ${REM_V_PERIF[@]}; do
+	printf "${RED}Removing Virtual Peripheral: ${v_perif}${NC}\n"
+    sed -i "/<Item>/I{:A;N;h;/<\/Item>/I!{H;bA};/<\/Item>/I{g;/\b${v_perif}\b/Id}}" "$OVF_FILENAME"
+done
 
-# STEP 4 (calculate SHA1 for the changes)
+# STEP 5 (calculate SHA1 for the changes)
 hash=($(sha1sum $OVF_FILENAME))
 echo $hash
 sed -i "/SHA1 ($OVF_FILENAME) = /c\SHA1 ($OVF_FILENAME) = ${hash}" "$MF_FILENAME"
