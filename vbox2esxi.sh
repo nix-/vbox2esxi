@@ -57,12 +57,16 @@ sed -i '/<rasd:ElementName>sataController/c\        <rasd:ElementName>SCSIContro
 sed -i '/<rasd:ResourceSubType>AHCI/c\        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>' "$OVF_FILENAME"
 sed -i '/<rasd:ResourceType>20/c\        <rasd:ResourceType>6</rasd:ResourceType>' "$OVF_FILENAME"
 
-diff -y $BAK_FILENAME $OVF_FILENAME 
-printf "\n${YEL} List of Changes ###---------------------------------------------------------------------------------------\n"
-diff -y --suppress-common-lines $BAK_FILENAME $OVF_FILENAME 
-printf "\n-----------------------------------------------------------------------------------------------------------${NC}\n"
 
 # STEP 4 (calculate SHA1 for the changes)
 hash=($(sha1sum $OVF_FILENAME))
 echo $hash
 sed -i "/SHA1 ($OVF_FILENAME) = /c\SHA1 ($OVF_FILENAME) = ${hash}" "$MF_FILENAME"
+
+# printing differences
+diff -y $BAK_FILENAME $OVF_FILENAME
+printf "\n${YEL} List of Changes ###---------------------------------------------------------------------------------------\n"
+diff -y --suppress-common-lines $BAK_FILENAME $OVF_FILENAME 
+printf "\n-----------------------------------------------------------------------------------------------------------${NC}\n"
+
+printf "\n${YEL} Note: for VMware ESXi7 use files with extensions *.ovf and *.vmdk ${NC}\n"
