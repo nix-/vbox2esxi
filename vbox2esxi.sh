@@ -67,6 +67,9 @@ sed -i '/<rasd:Description>SATA Controller/c\        <rasd:Description>SCSI Cont
 sed -i '/<rasd:ElementName>sataController/c\        <rasd:ElementName>SCSIController</rasd:ElementName>' "$OVF_FILENAME"
 sed -i '/<rasd:ResourceSubType>AHCI/c\        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>' "$OVF_FILENAME"
 sed -i '/<rasd:ResourceType>20/c\        <rasd:ResourceType>6</rasd:ResourceType>' "$OVF_FILENAME"
+# changing the display settings
+sed -i '/<Display controller/c\        <Display controller="VMSVGA" VRAMSize="16"/>' "$OVF_FILENAME"
+sed -i '/<VideoCapture file/c\        <VideoCapture file="." fps="25"/>' "$OVF_FILENAME"
 
 # STEP 4 (removing virtual peripherals)
 #    removing the possibly incompatible peripherals
